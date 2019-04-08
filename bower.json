@@ -1,23 +1,15 @@
 {
   "name": "purescript-storable",
   "description": "A PureScript abstraction for storable things and storages",
-  "authors": [
-    "Rickard Andersson <gonz@severnatazvezda.com>"
-  ],
+  "authors": ["Rickard Andersson <gonz@severnatazvezda.com>"],
   "license": "MIT",
-  "keywords": [
-    "purescript",
-    "storage",
-    "storable"
-  ],
+  "keywords": ["purescript", "storage", "storable"],
   "homepage": "https://github.com/GoNZooo/purescript-storable",
-  "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "test",
-    "tests"
-  ],
+  "ignore": ["**/.*", "node_modules", "bower_components", "test", "tests"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GoNZooo/purescript-storable.git"
+  },
   "dependencies": {
     "purescript-console": "^4.2.0",
     "purescript-foreign": "^5.0.0",
