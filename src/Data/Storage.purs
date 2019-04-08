@@ -85,9 +85,7 @@ else instance monadStorageMonadState ::
   ( Storable a
   , MonadState (Map String String) m
   ) => MonadStorage m a where
-  store a = do
-    modify_ $ insert (getKey a) (serialize a)
-    pure (Right unit)
+  store a = Right <$> (modify_ $ insert (getKey a) (serialize a))
 
   retrieve k = do
     state <- get
