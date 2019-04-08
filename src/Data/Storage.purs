@@ -69,7 +69,7 @@ derive instance eqStorageError     :: Eq StorageError
 getKey :: ∀ a. Storable a => a -> String
 getKey a = prefix (Proxy :: Proxy a) <> ":" <> key a
 
--- | When given a `Proxy a` and a key will produce a key in a useful format.
+-- | When given a `Proxy a` and a key will produce the corresponding composite key.
 makeKey :: ∀ a. Storable a => Proxy a -> String -> String
 makeKey p k = prefix p <> ":" <> k
 
