@@ -1,0 +1,16 @@
+{
+  "name": "purescript-storable",
+  "version": "0.0.1",
+  "description": "A PureScript abstraction for storable things and storages",
+  "main": "index.js",
+  "repository": "https://github.com/GoNZooo/purescript-storable.git",
+  "author": "Rickard Andersson <gonz@severnatazvezda.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "bower": "^1.8.8",
+    "pulp": "^12.4.0",
+    "purescript": "^0.12.4",
+    "request": "^2.88.0",
+    "spago": "^0.7.5"
+  }
+}
