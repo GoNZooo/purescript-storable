@@ -1,7 +1,6 @@
 {
   "name": "purescript-storable",
   "description": "A PureScript abstraction for storable things and storages",
-  "main": "index.js",
   "authors": [
     "Rickard Andersson <gonz@severnatazvezda.com>"
   ],
