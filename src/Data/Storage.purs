@@ -65,9 +65,11 @@ derive instance genRepStorageError :: Rep.Generic StorageError _
 instance showStorageError          :: Show StorageError where show = genericShow
 derive instance eqStorageError     :: Eq StorageError
 
+-- | Given a storable `a` will produce the key that it would have in storage.
 getKey :: ∀ a. Storable a => a -> String
 getKey a = prefix (Proxy :: Proxy a) <> ":" <> key a
 
+-- | When given a `Proxy a` and a key will produce a key in a useful format.
 makeKey :: ∀ a. Storable a => Proxy a -> String -> String
 makeKey p k = prefix p <> ":" <> k
 
