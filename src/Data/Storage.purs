@@ -22,12 +22,13 @@ import Data.Generic.Rep as Rep
 import Data.Generic.Rep.Show (genericShow)
 import Data.List.Types (NonEmptyList)
 import Data.Map (Map, insert, lookup)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe, maybe)
+import Data.Storage.FFI (localStorage, sessionStorage)
+import Data.Storage.LocalStorage (LocalStorage)
+import Data.Storage.SessionStorage (SessionStorage)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Uncurried (EffectFn4, EffectFn6, runEffectFn4, runEffectFn6)
 import Foreign (ForeignError)
-import Data.Storage.FFI (localStorage)
-import Data.Storage.LocalStorage (LocalStorage)
 import Type.Proxy (Proxy(..))
 import Web.Storage.Storage (Storage)
 
@@ -64,23 +65,12 @@ makeKey :: ∀ a. Storable a => Proxy a -> String -> String
 makeKey p k = prefix p <> ":" <> k
 
 instance monadStorageLocalStorage :: Storable a => MonadStorage LocalStorage a where
-  store a = do
-    lsResult <- liftEffect $ localStorage
-    case lsResult of
-      Just ls ->
-        setItem ls (getKey a) (serialize a)
+  store a    = liftEffect $ localStorage >>= maybeWriteToEffectStorage a
+  retrieve k = liftEffect $ localStorage >>= maybeReadFromEffectStorage k
 
-      Nothing ->
-        pure $ Left NoStorageError
-
-  retrieve k = do
-    lsResult <- liftEffect $ localStorage
-    case lsResult of
-      Just ls ->
-        getItem ls (makeKey (Proxy :: Proxy a) k) >>=
-          either (pure <<< Left) (pure <<< deserialize)
-      Nothing ->
-        pure $ Left NoStorageError
+else instance monadStorageSessionStorage :: Storable a => MonadStorage SessionStorage a where
+  store a    = liftEffect $ sessionStorage >>= maybeWriteToEffectStorage a
+  retrieve k = liftEffect $ sessionStorage >>= maybeReadFromEffectStorage k
 
 else instance monadStorageMonadState ::
   ( Storable a
@@ -92,13 +82,44 @@ else instance monadStorageMonadState ::
 
   retrieve k = do
     state <- get
-    let v = lookup (makeKey (Proxy :: Proxy a) k) state
-    case v of
-      Just string ->
-        pure $ deserialize string
+    maybe (pure $ Left $ NoValueError k) (pure <<< deserialize)
+          (lookup (makeKey (Proxy :: Proxy a) k) state)
 
-      Nothing ->
-        pure $ Left $ NoValueError k
+maybeWriteToEffectStorage :: ∀ a m
+  . Storable a
+ => MonadEffect m
+ => a
+ -> Maybe Storage
+ -> m (Either StorageError Unit)
+maybeWriteToEffectStorage a =
+  maybe (pure $ Left NoStorageError) (writeToEffectStorage a)
+
+maybeReadFromEffectStorage :: ∀ a m
+  . Storable a
+ => MonadEffect m
+ => String
+ -> Maybe Storage
+ -> m (Either StorageError a)
+maybeReadFromEffectStorage k =
+  maybe (pure $ Left NoStorageError) (readFromEffectStorage k)
+
+writeToEffectStorage :: ∀ a m
+  . Storable a
+ => MonadEffect m
+ => a
+ -> Storage
+ -> m (Either StorageError Unit)
+writeToEffectStorage a storage = setItem storage (getKey a) (serialize a)
+
+readFromEffectStorage :: ∀ a m
+  . Storable a
+ => MonadEffect m
+ => String
+ -> Storage
+ -> m (Either StorageError a)
+readFromEffectStorage k storage =
+  getItem storage (makeKey (Proxy :: Proxy a) k) >>=
+    either (pure <<< Left) (pure <<< deserialize)
 
 getItem :: ∀ m. MonadEffect m => Storage -> String -> m (Either StorageError String)
 getItem storage key =
