@@ -10,6 +10,7 @@ module Data.Storage
 , deserialize
 , StorageError(..)
 , getKey
+, makeKey
 )
 
 where
@@ -33,13 +34,26 @@ import Type.Proxy (Proxy(..))
 import Web.Storage.Storage (Storage)
 
 class Storable a <= MonadStorage m a where
+  -- | Writes a storable `a` in a monad `m`, returning `Left NoStorageError` representing the lack
+  -- | of a storage on error or returning `Right Unit` on success.
   store    :: a -> m (Either StorageError Unit)
+
+  -- | Reads a storable `a` when given a key in monad `m`, returning either a `Left` containing
+  -- | an error representing unavailable storage, decoding error or no value matching the supplied'
+  -- | key.
   retrieve :: String -> m (Either StorageError a)
 
 class Storable a where
+  -- | Produces a key from the given `a`. This is most appropriately an `id` or something like it.
   key         :: a -> String
+  -- | When given a proxy of `a` returns a prefix that all items with that type will be stored with.
   prefix      :: Proxy a -> String
+  -- | Takes an `a` and (hopefully) reliably turns it into a string; this should be symmetric with
+  -- | `deserialize`. This can be conveniently implemented using `Simple.JSON`.
   serialize   :: a -> String
+  -- | Takes a string and either successfully decodes it into a `Right a` or returns a
+  -- | `DecodingError` that contains a `NonEmptyList ForeignError`. This matches the error value
+  -- | that `Simple.JSON` returns.
   deserialize :: String -> Either StorageError a
 
 data StorageError
@@ -50,13 +64,6 @@ data StorageError
 derive instance genRepStorageError :: Rep.Generic StorageError _
 instance showStorageError          :: Show StorageError where show = genericShow
 derive instance eqStorageError     :: Eq StorageError
-
-getKeys :: ∀ container item
-  . Functor container
- => Storable item
- => container item
- -> container String
-getKeys items = map getKey items
 
 getKey :: ∀ a. Storable a => a -> String
 getKey a = prefix (Proxy :: Proxy a) <> ":" <> key a
